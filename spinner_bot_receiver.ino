@@ -6,7 +6,7 @@
 RF24 radio (7, 8); // CE,CSN
 
 //Create a pipe addresses for  communication
-const uint64_t pipe = 0xE8E8F0F0E1LL;
+const uint64_t pipe = 3737;
 
 struct JoystickData {
   int X;
@@ -60,15 +60,15 @@ void loop()
   int xAxis = joystickData.X;
   int yAxis = joystickData.Y;
   bool buttonState = joystickData.buttonState;
-//  Serial.print("X:");
-//  Serial.println(joystickData.X);
-  Serial.print("Y ");
+  Serial.print("X:");
+  Serial.println(joystickData.X);
+  Serial.print(" Y ");
   Serial.println(joystickData.Y);
 //  int forward = map(yAxis, 570, 1024, 0, 255);
 //  int backward = map(yAxis, 480, 0, 0, 255);
   // For some reason, the joystick hits 0 when all the way forward
   int backward = map(yAxis, 570, 1024, 0, 255);
-  int forward = map(yAxis, 480, 1, 0, 255);
+  int forward = map(yAxis, 480, 0, 0, 255);
   int right = map(xAxis, 570, 1024, 0, 255);
   int left = map(xAxis, 480, 0, 0, 255);
 
@@ -79,8 +79,8 @@ void loop()
     analogWrite(motora_2, 0);
     // Set Motor B stop
     analogWrite(motorb_1, 0);
-    analogWrite(motorb_2, 0);
-  } else if (yAxis < 480) {                  // Move forward
+    analogWrite(motorb_2, 0);    
+  }else if (yAxis < 480) {                  // Move forward
     // Set Motor A forward
     analogWrite(motora_1, forward);
     analogWrite(motora_2, 0);
@@ -116,44 +116,7 @@ void loop()
     analogWrite(motorb_1, 0);
     analogWrite(motorb_2, 0);    
   }
-//  if (yAxis > 570) {          // Move Forward
-//    // Set Motor A forward
-//    Serial.print(pos.Y);
-//    Serial.println(" move forward");
-//    analogWrite(motora_1, forward);
-//    analogWrite(motora_2, 0);
-//    // Set Motor B forward
-//    analogWrite(motorb_1, forward);
-//    analogWrite(motorb_2, 0);
-//  } else if (yAxis < 480) {                     //Move Backward
-//    // Set Motor A backward
-//    analogWrite(motora_1, 0);
-//    analogWrite(motora_2, backward);
-//    // Set Motor B backward
-//    analogWrite(motorb_1, 0);
-//    analogWrite(motorb_2, backward);
-//  } else if (xAxis > 570) {                     // Move Right
-//    // Set Motor A forward
-//    analogWrite(motora_1, right);
-//    analogWrite(motora_2, 0);
-//    // Set Motor B stop
-//    analogWrite(motorb_1, 0);
-//    analogWrite(motorb_2, 0);
-//  } else if (xAxis < 480) {                     // Move Left
-//    // Set Motor A stop
-//    analogWrite(motora_1, 0);
-//    analogWrite(motora_2, 0);
-//    // Set Motor B foward
-//    analogWrite(motorb_1, left);
-//    analogWrite(motorb_2, 0);
-//  } else  {     //stop
-//    // Set Motor A stop
-//    analogWrite(motora_1, 0);
-//    analogWrite(motora_2, 0);
-//    // Set Motor B stop
-//    analogWrite(motorb_1, 0);
-//    analogWrite(motorb_2, 0);
-//  }
+
     Serial.print("button state: ");
     Serial.println(buttonState);
     if (buttonState == 0 ) {
