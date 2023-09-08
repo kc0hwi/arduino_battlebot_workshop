@@ -8,17 +8,11 @@
 RF24 radio(7, 8);
 
 //Create a pipe addresses for  communication
-const uint64_t pipe = 0xE8E8F0F0E1LL;
+const uint64_t pipe = 3737;
 
 
-struct package
-{
-  int X=1;
-  int Y=1;
-};
 
-//typedef struct package Package;
-//Package pos;
+
 struct JoystickData {
   int X;
   int Y;
@@ -55,11 +49,11 @@ void loop() {
   Serial.println(joystickData.X);
   Serial.print("    Y");
   Serial.println(joystickData.Y);
-//  Serial.print("    button");
-//  Serial.println(buttonState);
+  Serial.print("    button");
+  Serial.println(joystickData.buttonState);
  
   radio.write(&joystickData, sizeof(joystickData)); // Send data  to the other NRF24L01 module
   //radio.write(&buttonState, sizeof(buttonState));
-  delay(300);
+  delay(200);
   
 }
