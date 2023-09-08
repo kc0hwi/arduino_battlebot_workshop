@@ -1,0 +1,166 @@
+#include <SPI.h>      //SPI library for communication with the nRF24L01+
+#include "RF24.h"  //The main library of the nRF24L01+
+#include "Wire.h"
+
+
+RF24 radio (7, 8); // CE,CSN
+
+//Create a pipe addresses for  communication
+const uint64_t pipe = 4747;
+
+struct JoystickData {
+  int X;
+  int Y;
+  bool buttonState;
+} joystickData;
+
+//typedef struct package Package;
+//Package pos;
+
+int buttonState;
+int spinnerState = false ;
+int motora_1 = 3;
+int motora_2 = 4;
+int motorb_1 = 5;
+int motorb_2 = 6;
+int motorc_1 = 9;
+int motorc_2 = 10;
+unsigned long lastButtonPressTime = 0; // To store the time of the last button press
+const unsigned long motorRunTime = 100; // Motor run time in milliseconds
+const unsigned long cooldownTime = 1000; // Cooldown time in milliseconds
+bool motorRunning = false; // Track if the motor is running
+bool motorDirectionForward = true; // Track the motor direction
+
+void setup()
+{
+  Serial.begin(9600);
+  radio.begin();                    //Start the nRF24 communicate
+  radio.openReadingPipe(1, pipe);   //Sets the address of the transmitter to which the program will receive data.
+  radio.startListening();
+  pinMode(motora_1, OUTPUT);
+  pinMode(motora_2, OUTPUT);
+  pinMode(motorb_1, OUTPUT);
+  pinMode(motorb_2, OUTPUT);
+  pinMode(motorc_1, OUTPUT);
+  pinMode(motorc_2, OUTPUT);
+
+  analogWrite(motorc_1, 0);
+  analogWrite(motorc_2, 0);
+//  Serial.print("test");
+  delay(100);
+}
+
+void loop()
+{
+
+  if (radio.available()) {
+    radio.read(&joystickData, sizeof(joystickData));
+    
+    Serial.print("X:");
+    Serial.println(joystickData.X);
+    Serial.print(" Y ");
+    Serial.println(joystickData.Y);
+    Serial.print("  Button ");
+    Serial.println(joystickData.buttonState);
+  }
+
+  int xAxis = joystickData.X;
+  int yAxis = joystickData.Y;
+  bool buttonState = joystickData.buttonState;
+
+//  int forward = map(yAxis, 570, 1024, 0, 255);
+//  int backward = map(yAxis, 480, 0, 0, 255);
+  // For some reason, the joystick hits 0 when all the way forward
+  int backward = map(yAxis, 570, 1024, 0, 255);
+  int forward = map(yAxis, 480, 0, 0, 255);
+  int right = map(xAxis, 570, 1024, 0, 255);
+  int left = map(xAxis, 480, 0, 0, 255);
+
+// Move forward
+  if (yAxis == 0) {
+    // Set Motor A stop
+    analogWrite(motora_1, 0);
+    analogWrite(motora_2, 0);
+    // Set Motor B stop
+    analogWrite(motorb_1, 0);
+    analogWrite(motorb_2, 0);
+  } else if (yAxis < 480) {                  // Move forward
+    // Set Motor A forward
+    analogWrite(motora_1, forward);
+    analogWrite(motora_2, 0);
+    // Set Motor B forward
+    analogWrite(motorb_1, forward);
+    analogWrite(motorb_2, 0);
+  } else if (yAxis > 550) {           // Move backwards
+    // Set Motor A backward
+    analogWrite(motora_1, 0);
+    analogWrite(motora_2, backward);
+    // Set Motor B backward
+    analogWrite(motorb_1, 0);
+    analogWrite(motorb_2, backward);    
+  } else if (xAxis > 570) {           // Move right
+    // Set Motor A forward
+    analogWrite(motora_1, right);
+    analogWrite(motora_2, 0);
+    // Set Motor B stop
+    analogWrite(motorb_1, 0);
+    analogWrite(motorb_2, 0); 
+  } else if (xAxis < 480 ){           // Move left
+    // Set Motor A stop
+    analogWrite(motora_1, 0);
+    analogWrite(motora_2, 0);
+    // Set Motor B foward
+    analogWrite(motorb_1, left);
+    analogWrite(motorb_2, 0);   
+  } else {
+    // Set Motor A stop
+    analogWrite(motora_1, 0);
+    analogWrite(motora_2, 0);
+    // Set Motor B stop
+    analogWrite(motorb_1, 0);
+    analogWrite(motorb_2, 0);    
+  }
+
+    Serial.print("button state: ");
+    Serial.println(buttonState);
+
+    unsigned long currentTime = millis();
+//
+  // Check if the button was pressed and released
+  if (buttonState == LOW && currentTime - lastButtonPressTime >= cooldownTime) {
+    // Toggle the motor direction
+    motorDirectionForward = !motorDirectionForward;
+    
+    // Start the motor
+    if (motorDirectionForward) {
+      analogWrite(motorc_1, 200);
+      analogWrite(motorc_2, 0);  
+    } else {
+      analogWrite(motorc_1, 0);
+      analogWrite(motorc_2, 200);
+    }
+    
+    motorRunning = true;
+    
+    // Record the start time of motor operation
+    lastButtonPressTime = currentTime;
+  }
+
+  // Check if the motor has been running for the specified time
+  if (motorRunning && currentTime - lastButtonPressTime >= motorRunTime) {
+    // Stop the motor
+      analogWrite(motorc_1, 0);
+      analogWrite(motorc_2, 0);
+    motorRunning = false;
+  }
+
+
+
+
+
+
+
+
+
+
+}
